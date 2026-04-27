@@ -2278,13 +2278,15 @@
             }, 2200);
         });
 
-        // ==================== THREE.JS 3D SCENE ====================
+        // ==================== THREE.JS 3D SCENE (Enhanced for mobile & scroll) ====================
         const canvas = document.getElementById('three-canvas');
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        let isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent) || window.innerWidth <= 768;
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: !isMobile, powerPreference: 'high-performance' });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(isMobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2));
+        renderer.setClearColor(0x000000, 0);
 
         // Lights
         const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
@@ -2309,8 +2311,8 @@
         const torusMaterial = new THREE.MeshPhongMaterial({ 
             color: 0xffd700, 
             transparent: true, 
-            opacity: 0.2,
-            wireframe: true
+            opacity: isMobile ? 0.12 : 0.2,
+            wireframe: !isMobile
         });
         const torus = new THREE.Mesh(torusGeometry, torusMaterial);
         torus.position.set(5, 0, -3);
@@ -2322,8 +2324,8 @@
         const icoMaterial = new THREE.MeshPhongMaterial({ 
             color: 0x00d4ff, 
             transparent: true, 
-            opacity: 0.15,
-            wireframe: true
+            opacity: isMobile ? 0.1 : 0.15,
+            wireframe: !isMobile
         });
         const ico = new THREE.Mesh(icoGeometry, icoMaterial);
         ico.position.set(-5, 2, -4);
@@ -2335,8 +2337,8 @@
         const knotMaterial = new THREE.MeshPhongMaterial({ 
             color: 0x7b2ff7, 
             transparent: true, 
-            opacity: 0.12,
-            wireframe: true
+            opacity: isMobile ? 0.08 : 0.12,
+            wireframe: !isMobile
         });
         const knot = new THREE.Mesh(knotGeometry, knotMaterial);
         knot.position.set(0, 3, -7);
@@ -2348,8 +2350,8 @@
         const octMaterial = new THREE.MeshPhongMaterial({ 
             color: 0xff6b35, 
             transparent: true, 
-            opacity: 0.2,
-            wireframe: true
+            opacity: isMobile ? 0.12 : 0.2,
+            wireframe: !isMobile
         });
         const oct = new THREE.Mesh(octGeometry, octMaterial);
         oct.position.set(4, -3, -2);
@@ -2361,8 +2363,8 @@
         const dodMaterial = new THREE.MeshPhongMaterial({ 
             color: 0x55efc4, 
             transparent: true, 
-            opacity: 0.18,
-            wireframe: true
+            opacity: isMobile ? 0.1 : 0.18,
+            wireframe: !isMobile
         });
         const dod = new THREE.Mesh(dodGeometry, dodMaterial);
         dod.position.set(-4, -2, -5);
@@ -2374,8 +2376,8 @@
         const sphereMaterial = new THREE.MeshPhongMaterial({ 
             color: 0x1a2d50, 
             transparent: true, 
-            opacity: 0.03,
-            wireframe: true
+            opacity: isMobile ? 0.02 : 0.03,
+            wireframe: !isMobile
         });
         const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
         sphere.position.set(0, 0, -12);
@@ -2383,14 +2385,15 @@
         objects.push({ mesh: sphere, rotSpeed: { x: 0.0005, y: 0.0005, z: 0 }, floatSpeed: 0, floatOffset: 0 });
 
         // Floating cubes
-        for (let i = 0; i < 25; i++) {
+        const cubeCount = isMobile ? 10 : 25;
+        for (let i = 0; i < cubeCount; i++) {
             const cubeGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
             const colors = [0x00d4ff, 0x7b2ff7, 0xff6b35, 0x55efc4, 0xffd700];
             const cubeMaterial = new THREE.MeshPhongMaterial({ 
                 color: colors[Math.floor(Math.random() * colors.length)], 
                 transparent: true, 
-                opacity: 0.35,
-                wireframe: true
+                opacity: isMobile ? 0.25 : 0.35,
+                wireframe: !isMobile
             });
             const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
             cube.position.set(
@@ -2413,7 +2416,7 @@
 
         // Particles
         const particlesGeometry = new THREE.BufferGeometry();
-        const particlesCount = 1500;
+        const particlesCount = isMobile ? 400 : 1500;
         const posArray = new Float32Array(particlesCount * 3);
         
         for (let i = 0; i < particlesCount * 3; i++) {
@@ -2422,55 +2425,96 @@
         
         particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
         const particlesMaterial = new THREE.PointsMaterial({
-            size: 0.025,
+            size: isMobile ? 0.035 : 0.025,
             color: 0x00d4ff,
             transparent: true,
-            opacity: 0.5
+            opacity: isMobile ? 0.45 : 0.5
         });
         const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
         scene.add(particlesMesh);
 
         camera.position.z = 5;
 
-        // Mouse interaction
+        // Mouse interaction + touch + device orientation + scroll parallax
         let mouseX = 0, mouseY = 0;
+        let lastScrollY = window.scrollY || 0;
+        let scrollVelocity = 0;
+        let scrollInfluence = 0;
+        let scrollTargetZ = 0;
+        let baseCameraZ = isMobile ? 7 : 5;
         document.addEventListener('mousemove', (e) => {
             mouseX = (e.clientX / window.innerWidth) * 2 - 1;
             mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
         });
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches && e.touches[0]) {
+                mouseX = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+                mouseY = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+            }
+        }, { passive: true });
+        window.addEventListener('deviceorientation', (e) => {
+            if (e.beta != null && e.gamma != null) {
+                mouseX = e.gamma / 90;
+                mouseY = e.beta / 90;
+            }
+        }, true);
+        window.addEventListener('scroll', () => {
+            const maxScroll = Math.max(document.body.scrollHeight - window.innerHeight, 1);
+            const scrollPercent = window.scrollY / maxScroll;
+            scrollTargetZ = scrollPercent * 8;
+            scrollVelocity = window.scrollY - lastScrollY;
+            lastScrollY = window.scrollY;
+        }, { passive: true });
 
         let time = 0;
+        let lastTime = performance.now();
         function animate() {
             requestAnimationFrame(animate);
-            time += 0.01;
+            const now = performance.now();
+            const delta = (now - lastTime) / 1000;
+            lastTime = now;
+            time += delta * 60 * 0.01;
+
+            // smooth scroll influence
+            scrollInfluence += (scrollVelocity - scrollInfluence) * 0.1;
+            const rotationBoost = Math.min(Math.abs(scrollInfluence) / 50, 2);
 
             objects.forEach(obj => {
-                obj.mesh.rotation.x += obj.rotSpeed.x;
-                obj.mesh.rotation.y += obj.rotSpeed.y;
-                obj.mesh.rotation.z += obj.rotSpeed.z;
-                obj.mesh.position.y += Math.sin(time * 2 + obj.floatOffset) * obj.floatSpeed;
+                obj.mesh.rotation.x += obj.rotSpeed.x * (1 + rotationBoost);
+                obj.mesh.rotation.y += obj.rotSpeed.y * (1 + rotationBoost);
+                obj.mesh.rotation.z += obj.rotSpeed.z * (1 + rotationBoost);
+                obj.mesh.position.y += Math.sin(time * 2 + obj.floatOffset) * obj.floatSpeed * (isMobile ? 0.6 : 1);
             });
 
-            camera.position.x += (mouseX * 0.5 - camera.position.x) * 0.05;
-            camera.position.y += (mouseY * 0.5 - camera.position.y) * 0.05;
+            const targetX = mouseX * (isMobile ? 0.3 : 0.5);
+            const targetY = mouseY * (isMobile ? 0.3 : 0.5);
+            camera.position.x += (targetX - camera.position.x) * 0.06;
+            camera.position.y += (targetY - camera.position.y) * 0.06;
+
+            const targetZ = baseCameraZ + scrollTargetZ;
+            camera.position.z += (targetZ - camera.position.z) * 0.06;
             camera.lookAt(scene.position);
 
-            particlesMesh.rotation.y += 0.0002;
-            particlesMesh.rotation.x += 0.0001;
+            particlesMesh.rotation.y += (isMobile ? 0.0005 : 0.0002) * (1 + rotationBoost * 0.2);
+            particlesMesh.rotation.x += (isMobile ? 0.0003 : 0.0001) * (1 + rotationBoost * 0.2);
 
-            pointLight1.position.x = Math.sin(time) * 7;
-            pointLight1.position.y = Math.cos(time) * 7;
-            pointLight2.position.x = Math.cos(time * 0.7) * 7;
-            pointLight2.position.y = Math.sin(time * 0.7) * 7;
+            const lightRadius = isMobile ? 5 : 7;
+            pointLight1.position.x = Math.sin(time) * lightRadius;
+            pointLight1.position.y = Math.cos(time) * lightRadius;
+            pointLight2.position.x = Math.cos(time * 0.7) * lightRadius;
+            pointLight2.position.y = Math.sin(time * 0.7) * lightRadius;
 
             renderer.render(scene, camera);
         }
         animate();
 
         window.addEventListener('resize', () => {
+            isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent) || window.innerWidth <= 768;
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(isMobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2));
+            baseCameraZ = isMobile ? 7 : 5;
         });
 
         // ==================== CSS PARTICLES ====================
