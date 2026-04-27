@@ -6,6 +6,7 @@
     <link rel="icon" href="https://www.unan.edu.ni/wp-content/uploads/unan-managua-marca-institucional-2904202002-1024x546.jpg" type="image/jpeg">
     <title>Invitación - Concurso Aplicaciones Móviles 2026 | UNAN-Carazo</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&family=Orbitron:wght@400;700;900&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -287,6 +288,55 @@
             padding: 0 50px;
             width: 100%;
             text-align: center;
+            perspective: 1200px;
+            transform-style: preserve-3d;
+        }
+
+        /* Per-character text spans for dramatic reveals */
+        .hero-title .char,
+        .gradient-text .char,
+        .hero-subtitle .char,
+        .intro-tagline .char {
+            display: inline-block;
+            transform-origin: 50% 50%;
+            backface-visibility: hidden;
+            will-change: transform, opacity;
+        }
+
+        /* Soft 3D flare behind the hero */
+        .hero-flare {
+            position: absolute;
+            left: 50%;
+            top: 40%;
+            width: 420px;
+            height: 420px;
+            transform: translate(-50%, -50%) scale(0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(48px) saturate(1.2);
+            opacity: 0;
+            z-index: 2;
+            background: radial-gradient(circle at 30% 40%, rgba(255,255,255,0.18), transparent 20%),
+                        radial-gradient(circle at 70% 60%, rgba(255,200,50,0.12), transparent 20%);
+        }
+
+        /* Make cards and interactive boxes ready for tilt transforms */
+        .event-card,
+        .generator-box,
+        .gen-team {
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        /* Ripple helper (injected dynamically) */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            background: rgba(255,255,255,0.12);
+            transform: translate(-50%, -50%);
+            opacity: 0.6;
+            mix-blend-mode: screen;
         }
 
         .invitation-badge {
@@ -1618,6 +1668,54 @@
             50% { transform: translateY(-10px) rotate(-5deg); }
             75% { transform: translateY(-25px) rotate(5deg); }
         }
+
+        /* CINEMATIC INTRO OVERLAY STYLES */ 
+        .intro-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 50% 40%, rgba(10,22,40,0.95), rgba(10,22,40,0.9));
+            transition: opacity 0.45s ease;
+        }
+        .intro-inner {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            align-items: center;
+            transform-style: preserve-3d;
+        }
+        .intro-logo {
+            width: 160px;
+            height: auto;
+            border-radius: 12px;
+            filter: drop-shadow(0 10px 30px rgba(0,0,0,0.6));
+            opacity: 0;
+        }
+        .intro-tagline {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.25rem;
+            color: var(--accent);
+            letter-spacing: 1px;
+            opacity: 0;
+            transform-origin: center;
+        }
+        .skip-btn {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.12);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+        }
+        .skip-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
     </style>
 </head>
 <body>
@@ -1628,6 +1726,15 @@
             <div class="preloader-icon">📩</div>
             <div class="preloader-text">Preparando tu invitación...</div>
             <div class="preloader-bar"></div>
+        </div>
+    </div>
+
+    <!-- CINEMATIC INTRO OVERLAY (plays once) -->
+    <div id="introOverlay" class="intro-overlay" style="display:none;">
+        <div class="intro-inner">
+            <img id="introLogo" class="intro-logo" src="https://www.unan.edu.ni/wp-content/uploads/unan-managua-marca-institucional-2904202002-1024x546.jpg" alt="UNAN Logo" />
+            <h3 class="intro-tagline">Concurso de Aplicaciones Móviles 2026</h3>
+            <button id="skipIntro" class="skip-btn" aria-label="Saltar intro">Saltar</button>
         </div>
     </div>
 
@@ -1668,6 +1775,7 @@
         <div class="envelope-float" style="top: 60%; right: 5%; animation-delay: 9s;">✉️</div>
 
         <div class="hero-content">
+            <div class="hero-flare" id="heroFlare" aria-hidden="true"></div>
             <div class="invitation-badge">
                 <span class="dot"></span>
                 Invitación Oficial Confirmada
@@ -2273,8 +2381,35 @@
     <script>
         // ==================== PRELOADER ====================
         window.addEventListener('load', () => {
+            // subtle preloader icon animation with anime.js if available
+            try {
+                if (window.anime) {
+                    anime({
+                        targets: '.preloader-icon',
+                        scale: [0, 1.08, 1],
+                        duration: 900,
+                        easing: 'easeOutElastic(1, .8)'
+                    });
+                }
+            } catch (e) {
+                // ignore
+            }
+
+            // after the preloader, decide whether to play intro or jump to init
             setTimeout(() => {
-                document.getElementById('preloader').classList.add('hidden');
+                const pre = document.getElementById('preloader');
+                if (pre) pre.classList.add('hidden');
+                const params = new URLSearchParams(window.location.search);
+                const replay = params.get('replayIntro') === '1';
+                const seen = localStorage.getItem('seenIntro') === '1';
+                const mobileShort = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent) || window.innerWidth <= 768;
+
+                if (!seen || replay) {
+                    try { showIntro({ short: mobileShort }); } catch (e) { try { if (window.anime) initAnime(); } catch (err) {} try { if (typeof boostAnimations === 'function') boostAnimations(); } catch (err) {} }
+                } else {
+                    try { if (window.anime) initAnime(); } catch (e) {}
+                    try { if (typeof boostAnimations === 'function') boostAnimations(); } catch (e) {}
+                }
             }, 2200);
         });
 
@@ -2577,6 +2712,222 @@
         updateCountdown();
         setInterval(updateCountdown, 1000);
 
+        // Init anime.js driven micro-interactions
+        function initAnime() {
+            try {
+                if (!window.anime) return;
+
+                // Navbar entrance
+                anime.timeline({ easing: 'easeOutExpo', duration: 700 })
+                    .add({ targets: '.nav-brand', translateY: [-20, 0], opacity: [0, 1] })
+                    .add({ targets: '.nav-links li', translateY: [-10, 0], opacity: [0, 1], delay: anime.stagger(80) }, '-=500')
+                    .add({ targets: '.nav-cta', scale: [0.95, 1], opacity: [0, 1], duration: 600 }, '-=400');
+
+                // Hero staging
+                anime.timeline({ easing: 'easeOutExpo', duration: 800 })
+                    .add({ targets: '.invitation-badge', translateY: [-20, 0], opacity: [0, 1] })
+                    .add({ targets: '.invitation-icon', scale: [0.6, 1], opacity: [0, 1], delay: 50 }, '-=600')
+                    .add({ targets: '.hero-title', translateY: [30, 0], opacity: [0, 1], duration: 900 }, '-=500')
+                    .add({ targets: '.hero-subtitle', translateY: [20, 0], opacity: [0, 1], delay: 50 }, '-=400')
+                    .add({ targets: '.event-date-badge', translateY: [20, 0], opacity: [0, 1], delay: 40 }, '-=400')
+                    .add({ targets: '.hero-buttons a', translateY: [20, 0], opacity: [0, 1], delay: anime.stagger(100) }, '-=300');
+
+                // Gradient shift (more control with anime)
+                anime({
+                    targets: '.gradient-text',
+                    backgroundPosition: ['0% 50%', '100% 50%'],
+                    duration: 3000,
+                    loop: true,
+                    direction: 'alternate',
+                    easing: 'linear'
+                });
+
+                // Animate stat counters
+                document.querySelectorAll('.stat-number').forEach((el, idx) => {
+                    const raw = (el.textContent || '').trim();
+                    const target = parseInt(raw.replace(/[^0-9]/g, '')) || 0;
+                    const counter = { value: 0 };
+                    anime({
+                        targets: counter,
+                        value: target,
+                        round: 1,
+                        duration: 1200,
+                        easing: 'easeOutCubic',
+                        update: function() { el.textContent = String(counter.value) + (idx === 0 ? '+' : ''); }
+                    });
+                });
+
+                // Button micro-interactions
+                document.querySelectorAll('.btn-primary, .btn-secondary, .confetti-btn, .nav-cta').forEach(btn => {
+                    btn.addEventListener('mouseenter', () => anime({ targets: btn, scale: 1.04, duration: 220, easing: 'easeOutCubic' }));
+                    btn.addEventListener('mouseleave', () => anime({ targets: btn, scale: 1, duration: 220, easing: 'easeOutCubic' }));
+                });
+
+                // Animate any already-visible scroll items
+                document.querySelectorAll('.animate-on-scroll.visible').forEach(el => {
+                    anime({ targets: el, opacity: [0, 1], translateY: [40, 0], duration: 700, easing: 'easeOutCubic' });
+                });
+            } catch (err) {
+                console.warn('initAnime failed', err);
+            }
+        }
+
+        // additional boost animations for more dramatic 'wow' effects
+        function boostAnimations() {
+            try {
+                if (!window.anime) return;
+
+                function splitText(selector) {
+                    document.querySelectorAll(selector).forEach(el => {
+                        if (el.dataset.splitDone) return;
+                        const text = (el.textContent || '').trim();
+                        el.innerHTML = text.split('').map(ch => ch === ' ' ? '<span class="char">&nbsp;</span>' : `<span class="char">${ch}</span>`).join('');
+                        el.dataset.splitDone = '1';
+                    });
+                }
+
+                splitText('.gradient-text');
+                splitText('.hero-subtitle');
+
+                // punchy letter reveal for the highlighted gradient word
+                anime({
+                    targets: '.gradient-text .char',
+                    translateY: [120, 0],
+                    rotateX: [90, 0],
+                    scale: [0.6, 1.06],
+                    opacity: [0, 1],
+                    duration: 800,
+                    delay: anime.stagger(50),
+                    easing: 'easeOutBack'
+                });
+
+                // small elastic pop on the title
+                anime({ targets: '.hero-title', scale: [0.98, 1.02], duration: 900, easing: 'easeOutElastic(1, .6)' });
+
+                // breathing flare behind hero
+                anime({ targets: '#heroFlare', opacity: [0, 0.9], scale: [0.9, 1.02], duration: 2200, direction: 'alternate', loop: true, easing: 'easeInOutSine' });
+
+                // faster, punchy reveal for cards
+                anime({ targets: '.event-card', translateY: [40, 0], opacity: [0, 1], delay: anime.stagger(70), duration: 640, easing: 'easeOutCubic' });
+
+                // subtle sparkle element
+                try {
+                    const sparkle = document.createElement('div');
+                    sparkle.style.position = 'fixed';
+                    sparkle.style.left = '60%';
+                    sparkle.style.top = '18%';
+                    sparkle.style.width = '8px';
+                    sparkle.style.height = '8px';
+                    sparkle.style.borderRadius = '50%';
+                    sparkle.style.background = 'rgba(255,255,255,0.9)';
+                    sparkle.style.pointerEvents = 'none';
+                    sparkle.style.zIndex = 99999;
+                    document.body.appendChild(sparkle);
+                    anime({ targets: sparkle, translateX: [-40, 40], opacity: [0, 1, 0], duration: 1800, easing: 'easeOutSine', loop: true, delay: 600 });
+                } catch (e) {}
+
+                // lift animation for generator teams
+                document.querySelectorAll('.gen-team').forEach((el, i) => {
+                    el.style.transformOrigin = 'center';
+                    el.addEventListener('mouseenter', () => anime({ targets: el, translateY: -8, duration: 420, easing: 'easeOutCubic' }));
+                    el.addEventListener('mouseleave', () => anime({ targets: el, translateY: 0, duration: 420, easing: 'easeOutCubic' }));
+                });
+
+                // enhance confetti with an additional burst
+                const originalCreate = window.createConfetti;
+                if (typeof originalCreate === 'function') {
+                    window.createConfetti = function() {
+                        originalCreate();
+                        try {
+                            const burst = document.createElement('div');
+                            burst.style.position = 'fixed';
+                            burst.style.left = '50%';
+                            burst.style.top = '22%';
+                            burst.style.width = '6px';
+                            burst.style.height = '6px';
+                            burst.style.borderRadius = '50%';
+                            burst.style.background = 'rgba(255,255,255,0.7)';
+                            burst.style.zIndex = 99999;
+                            document.body.appendChild(burst);
+                            anime({ targets: burst, scale: [1, 36], opacity: [0.9, 0], duration: 900, easing: 'easeOutQuad', complete: () => burst.remove() });
+                        } catch (e) {}
+                    };
+                }
+            } catch (err) {
+                console.warn('boostAnimations failed', err);
+            }
+        }
+
+        // helper: split text into spans for per-letter animations
+        function splitText(selector) {
+            document.querySelectorAll(selector).forEach(el => {
+                if (el.dataset.splitDone) return;
+                const text = (el.textContent || '').trim();
+                el.innerHTML = text.split('').map(ch => ch === ' ' ? '<span class="char">&nbsp;</span>' : `<span class="char">${ch}</span>`).join('');
+                el.dataset.splitDone = '1';
+            });
+        }
+
+        function showIntro({ short = false } = {}) {
+            const overlay = document.getElementById('introOverlay');
+            if (!overlay) {
+                try { if (window.anime) initAnime(); } catch (e) {}
+                try { if (typeof boostAnimations === 'function') boostAnimations(); } catch (e) {}
+                return;
+            }
+            overlay.style.display = 'flex';
+            overlay.style.opacity = '0';
+            try {
+                if (!window.anime) throw new Error('no anime');
+
+                // prepare text and logo
+                splitText('.intro-tagline');
+                const chars = document.querySelectorAll('.intro-tagline .char');
+                const logo = document.getElementById('introLogo');
+
+                const tl = anime.timeline({ easing: 'easeOutExpo' });
+                tl.add({ targets: overlay, opacity: [0, 1], duration: 220, easing: 'linear' })
+                  .add({ targets: logo, scale: [0, 1.24, 1], rotate: [-6, 0], opacity: [0, 1], duration: short ? 500 : 900, easing: 'easeOutBack' }, '+=80')
+                  .add({ targets: chars, translateY: [120, 0], rotateX: [90, 0], opacity: [0, 1], scale: [0.6,1.04], duration: short ? 520 : 760, delay: anime.stagger(short ? 30 : 45), easing: 'easeOutBack' }, '-=520')
+                  .add({ targets: '#heroFlare', opacity: [0, 0.9], scale: [0.9, 1.02], duration: 520, easing: 'easeOutCubic' }, '-=420')
+                  .add({ targets: overlay, opacity: [1, 0], duration: short ? 420 : 600, delay: short ? 420 : 800, easing: 'easeInCubic', complete: () => {
+                      overlay.style.display = 'none';
+                      localStorage.setItem('seenIntro', '1');
+                      try { if (window.anime) initAnime(); } catch (e) {}
+                      try { if (typeof boostAnimations === 'function') boostAnimations(); } catch (e) {}
+                      try { if (!short && typeof createConfetti === 'function') createConfetti(); } catch (e) {}
+                  }});
+            } catch (err) {
+                overlay.style.display = 'none';
+                localStorage.setItem('seenIntro', '1');
+                try { if (window.anime) initAnime(); } catch (e) {}
+                try { if (typeof boostAnimations === 'function') boostAnimations(); } catch (e) {}
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'skipIntro') {
+                e.preventDefault();
+                const overlay = document.getElementById('introOverlay');
+                if (!overlay) return;
+                try {
+                    if (window.anime) {
+                        anime({ targets: overlay, opacity: [1, 0], duration: 260, easing: 'easeInCubic', complete: () => {
+                            overlay.style.display = 'none';
+                            localStorage.setItem('seenIntro', '1');
+                            try { if (window.anime) initAnime(); } catch (e) {}
+                            try { if (typeof boostAnimations === 'function') boostAnimations(); } catch (e) {}
+                        }});
+                        return;
+                    }
+                } catch (err) {}
+                overlay.style.display = 'none';
+                localStorage.setItem('seenIntro', '1');
+                try { if (window.anime) initAnime(); } catch (e) {}
+                try { if (typeof boostAnimations === 'function') boostAnimations(); } catch (e) {}
+            }
+        });
+
         // ==================== SCROLL ANIMATIONS ====================
         const observerOptions = {
             threshold: 0.1,
@@ -2586,7 +2937,21 @@
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
+                    // animate with anime.js when available
+                    try {
+                        if (window.anime) {
+                            anime({
+                                targets: entry.target,
+                                opacity: [0, 1],
+                                translateY: [40, 0],
+                                duration: 700,
+                                easing: 'easeOutCubic',
+                                delay: 80
+                            });
+                        }
+                    } catch (e) {}
                     entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
                 }
             });
         }, observerOptions);
@@ -2689,16 +3054,26 @@
                                     ${teamMembers}
                                 </div>
                             `;
-                            display.scrollTop = display.scrollHeight;
+                            // animate the newly appended team block for a polished reveal
+                            setTimeout(() => {
+                                const teamsEls = display.querySelectorAll('.gen-team');
+                                const lastEl = teamsEls[teamsEls.length - 1];
+                                if (lastEl && window.anime) {
+                                    anime({ targets: lastEl, translateY: [20, 0], opacity: [0, 1], duration: 600, easing: 'easeOutCubic' });
+                                }
+                                display.scrollTop = display.scrollHeight;
+                            }, 40);
                             teamIndex++;
                             setTimeout(showTeam, 300);
                         } else {
-                            display.innerHTML += `<br><span class="code-output">🎓 ¡${allStudents.length} estudiantes distribuidos en ${numTeams} equipos exitosamente!</span>`;
-                            display.scrollTop = display.scrollHeight;
-                            display.classList.remove('generating');
-                            btn.disabled = false;
-                            btn.innerHTML = '<i class="fab fa-python"></i> Generar Equipos Aleatorios';
-                        }
+                                display.innerHTML += `<br><span class="code-output">🎓 ¡${allStudents.length} estudiantes distribuidos en ${numTeams} equipos exitosamente!</span>`;
+                                display.scrollTop = display.scrollHeight;
+                                display.classList.remove('generating');
+                                try { if (window.anime) anime({ targets: display, scale: [0.98, 1], duration: 700, easing: 'easeOutElastic(1, .7)' }); } catch(e) {}
+                                try { if (typeof createConfetti === 'function') createConfetti(); } catch(e) {}
+                                btn.disabled = false;
+                                btn.innerHTML = '<i class="fab fa-python"></i> Generar Equipos Aleatorios';
+                            }
                     }
                     showTeam();
                 }
@@ -2709,13 +3084,32 @@
         // ==================== RSVP CONFIRM (WhatsApp) ====================
         function confirmRSVP(e) {
             e.preventDefault();
+            // show animated overlay + confetti, then open WhatsApp
+            try {
+                const overlay = document.getElementById('rsvpOverlay');
+                if (overlay) {
+                    overlay.classList.add('active');
+                    if (window.anime) {
+                        anime({ targets: '#rsvpOverlay .rsvp-confirmed-content', translateY: [30, 0], opacity: [0, 1], duration: 700, easing: 'easeOutCubic' });
+                    }
+                }
+            } catch (e) {}
+            try { if (typeof createConfetti === 'function') createConfetti(); } catch (e) {}
             const phone = '50586251971';
             const message = encodeURIComponent('si llegare o si participare');
             window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
         }
 
         function closeRSVP() {
-            document.getElementById('rsvpOverlay').classList.remove('active');
+            const overlay = document.getElementById('rsvpOverlay');
+            if (!overlay) return;
+            try {
+                if (window.anime) {
+                    anime({ targets: '#rsvpOverlay .rsvp-confirmed-content', translateY: [0, 30], opacity: [1, 0], duration: 420, easing: 'easeInCubic', complete: () => overlay.classList.remove('active') });
+                    return;
+                }
+            } catch (e) {}
+            overlay.classList.remove('active');
         }
 
         // ==================== CONFETTI ====================
