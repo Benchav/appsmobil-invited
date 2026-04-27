@@ -1966,71 +1966,10 @@
                     </ul>
                 </div>
 
-                <div class="python-code-container animate-on-scroll">
-                    <div class="code-header">
-                        <div class="code-dot red"></div>
-                        <div class="code-dot yellow"></div>
-                        <div class="code-dot green"></div>
-                        <span>formar_equipos.py</span>
-                    </div>
-                    <div class="code-body">
-<div class="code-line"><span class="line-number"> 1</span><span class="code-keyword">import</span> random</div>
-<div class="code-line"><span class="line-number"> 2</span><span class="code-keyword">from</span> datetime <span class="code-keyword">import</span> datetime</div>
-<div class="code-line"><span class="line-number"> 3</span></div>
-<div class="code-line"><span class="line-number"> 4</span><span class="code-comment"># 📋 Lista de estudiantes registrados</span></div>
-<div class="code-line"><span class="line-number"> 5</span><span class="code-variable">estudiantes</span> <span class="code-operator">=</span> [</div>
-<div class="code-line"><span class="line-number"> 6</span>    <span class="code-string">"Carlos Mejía"</span>, <span class="code-string">"Ana Rodríguez"</span>,</div>
-<div class="code-line"><span class="line-number"> 7</span>    <span class="code-string">"Pedro Navarro"</span>, <span class="code-string">"María López"</span>,</div>
-<div class="code-line"><span class="line-number"> 8</span>    <span class="code-string">"José Martínez"</span>, <span class="code-string">"Laura Pérez"</span>,</div>
-<div class="code-line"><span class="line-number"> 9</span>    <span class="code-string">"David García"</span>, <span class="code-string">"Sofía Hernández"</span>,</div>
-<div class="code-line"><span class="line-number">10</span>    <span class="code-string">"Miguel Torres"</span>, <span class="code-string">"Andrea Ramírez"</span>,</div>
-<div class="code-line"><span class="line-number">11</span>    <span class="code-string">"... y más estudiantes"</span></div>
-<div class="code-line"><span class="line-number">12</span>]</div>
-<div class="code-line"><span class="line-number">13</span></div>
-<div class="code-line"><span class="line-number">14</span><span class="code-variable">num_equipos</span> <span class="code-operator">=</span> <span class="code-number">12</span></div>
-<div class="code-line"><span class="line-number">15</span><span class="code-variable">event_date</span> <span class="code-operator">=</span> <span class="code-string">"28/04/2026"</span></div>
-<div class="code-line"><span class="line-number">16</span></div>
-<div class="code-line"><span class="line-number">17</span><span class="code-comment"># 🎲 Mezclar aleatoriamente</span></div>
-<div class="code-line"><span class="line-number">18</span>random<span class="code-operator">.</span>seed(datetime.now().timestamp())</div>
-<div class="code-line"><span class="line-number">19</span><span class="code-function">random</span>.<span class="code-function">shuffle</span>(<span class="code-variable">estudiantes</span>)</div>
-<div class="code-line"><span class="line-number">20</span></div>
-<div class="code-line"><span class="line-number">21</span><span class="code-comment"># 📦 Distribuir en equipos</span></div>
-<div class="code-line"><span class="line-number">22</span><span class="code-variable">equipos</span> <span class="code-operator">=</span> [[] <span class="code-keyword">for</span> _ <span class="code-keyword">in</span> <span class="code-builtin">range</span>(<span class="code-variable">num_equipos</span>)]</div>
-<div class="code-line"><span class="line-number">23</span></div>
-<div class="code-line"><span class="line-number">24</span><span class="code-keyword">for</span> <span class="code-variable">i</span>, <span class="code-variable">estudiante</span> <span class="code-keyword">in</span> <span class="code-builtin">enumerate</span>(<span class="code-variable">estudiantes</span>):</div>
-<div class="code-line"><span class="line-number">25</span>    <span class="code-variable">equipo_idx</span> <span class="code-operator">=</span> <span class="code-variable">i</span> % <span class="code-variable">num_equipos</span></div>
-<div class="code-line"><span class="line-number">26</span>    <span class="code-variable">equipos</span>[<span class="code-variable">equipo_idx</span>].<span class="code-function">append</span>(<span class="code-variable">estudiante</span>)</div>
-<div class="code-line"><span class="line-number">27</span></div>
-<div class="code-line"><span class="line-number">28</span><span class="code-comment"># 📢 Mostrar resultados</span></div>
-<div class="code-line"><span class="line-number">29</span><span class="code-keyword">print</span>(<span class="code-string">"🎓 Equipos formados - 28/04/2026"</span>)</div>
-<div class="code-line"><span class="line-number">30</span><span class="code-keyword">print</span>(<span class="code-string">"="</span> * <span class="code-number">40</span>)</div>
-<div class="code-line"><span class="line-number">31</span><span class="code-keyword">for</span> <span class="code-variable">i</span>, <span class="code-variable">equipo</span> <span class="code-keyword">in</span> <span class="code-builtin">enumerate</span>(<span class="code-variable">equipos</span>, <span class="code-number">1</span>):</div>
-<div class="code-line"><span class="line-number">32</span>    <span class="code-keyword">print</span>(<span class="code-string">f"🏆 Equipo <span class="code-variable">{i}</span>: <span class="code-variable">{equipo}</span>"</span>)</div>
-<div class="code-line"><span class="line-number">33</span></div>
-<div class="code-line"><span class="line-number">34</span><span class="code-comment"># ✅ Algoritmo ejecutado exitosamente</span></div>
-<div class="code-line"><span class="line-number">35</span><span class="code-keyword">print</span>(<span class="code-string">f"\n📊 Total: <span class="code-variable">{len(estudiantes)}</span> estudiantes"</span>)</div>
-<div class="code-line"><span class="line-number">36</span><span class="code-keyword">print</span>(<span class="code-string">f"📊 Equipos: <span class="code-variable">{num_equipos}</span>"</span>)</div>
-                    </div>
-                </div>
+                <!-- Código de ejemplo en Python eliminado -->
             </div>
 
-            <!-- LIVE TEAM GENERATOR DEMO -->
-            <div class="team-generator animate-on-scroll">
-                <div class="generator-box">
-                    <h3>🎲 Demo: Generador de Equipos</h3>
-                    <p>Haz clic para simular cómo se formarán los equipos el día del evento</p>
-                    
-                    <div class="generator-display" id="generatorDisplay">
-                        <span class="code-comment">👆 Presiona el botón para generar equipos aleatorios</span><br><br>
-                        <span class="code-comment">El algoritmo mezclará a todos los estudiantes</span><br>
-                        <span class="code-comment">y los distribuirá en equipos de forma equitativa.</span>
-                    </div>
-
-                    <button class="gen-btn" id="genBtn" onclick="generateTeams()">
-                        <i class="fab fa-python"></i> Generar Equipos Aleatorios
-                    </button>
-                </div>
-            </div>
+            <!-- Generador de equipos eliminado -->
         </div>
     </section>
 
@@ -2974,112 +2913,9 @@
             }
         }
 
-        // ==================== TEAM GENERATOR ====================
-        const allStudents = [
-            "Carlos Mejía", "Ana Rodríguez", "Pedro Navarro", "María López",
-            "José Martínez", "Laura Pérez", "David García", "Sofía Hernández",
-            "Miguel Torres", "Andrea Ramírez", "Fernando Díaz", "Isabella Morales",
-            "Roberto Castillo", "Valentina Reyes", "Alejandro Vega", "Camila Ortega",
-            "Sergio Gutiérrez", "Paula Mendoza", "Andrés Solís", "Daniela Fuentes",
-            "Ricardo Luna", "Gabriela Vargas", "Esteban Castro", "Natalia Peña",
-            "Héctor Ramírez", "Lucía Fonseca", "Rafael Morales", "Carmen Jiménez",
-            "Óscar Poveda", "Teresa Blanco", "Manuel Delgado", "Adriana Suárez",
-            "Raúl Montoya", "Patricia Herrera", "Luis Morales", "Cristina Vargas",
-            "Jorge Castillo", "Marta Solís", "Fernando Reyes", "Andrea López",
-            "Miguel Ángel Ruiz", "Sandra Pérez", "Carlos Eduardo Díaz", "María José Torres",
-            "Pedro Alberto García", "Ana Patricia Hernández", "José Daniel Martínez", "Laura Sofía Pérez",
-            "David Alejandro García", "Sofía María Hernández", "Miguel Ángel Torres", "Andrea Valeria Ramírez",
-            "Fernando José Díaz", "Isabella Carmen Morales", "Roberto Luis Castillo"
-        ];
-
-        function generateTeams() {
-            const btn = document.getElementById('genBtn');
-            const display = document.getElementById('generatorDisplay');
-            
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
-            display.classList.add('generating');
-            display.innerHTML = '<span class="code-comment">🐍 Ejecutando algoritmo Python...</span><br><br>';
-
-            // Simulate step-by-step generation
-            const steps = [
-                { delay: 300, html: '<span class="code-keyword">import</span> random<br>' },
-                { delay: 600, html: '<span class="code-variable">estudiantes</span> = <span class="code-builtin">list</span>(<span class="code-number">' + allStudents.length + '</span> registrados)<br>' },
-                { delay: 900, html: '<span class="code-variable">num_equipos</span> = <span class="code-number">12</span><br>' },
-                { delay: 1200, html: '<span class="code-comment">🎲 random.shuffle(estudiantes)</span><br><br>' },
-                { delay: 1500, html: '<span class="code-output">✅ Estudiantes mezclados aleatoriamente</span><br><br>' },
-            ];
-
-            let stepIndex = 0;
-            
-            function showStep() {
-                if (stepIndex < steps.length) {
-                    display.innerHTML += steps[stepIndex].html;
-                    display.scrollTop = display.scrollHeight;
-                    stepIndex++;
-                    setTimeout(showStep, steps[stepIndex - 1].delay - (stepIndex > 1 ? steps[stepIndex - 2].delay : 0));
-                } else {
-                    // Generate actual teams
-                    const shuffled = [...allStudents];
-                    const numTeams = 12;
-                    
-                    // Fisher-Yates shuffle
-                    for (let i = shuffled.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-                    }
-
-                    const teams = Array.from({ length: numTeams }, () => []);
-                    for (let i = 0; i < shuffled.length; i++) {
-                        teams[i % numTeams].push(shuffled[i]);
-                    }
-
-                    display.innerHTML += '<span class="code-comment">📦 Distribuyendo en equipos...</span><br><br>';
-                    
-                    let teamIndex = 0;
-                    const teamColors = ['#00d4ff', '#7b2ff7', '#ff6b35', '#55efc4', '#ffd700', '#fd79a8', 
-                                       '#48dbfb', '#ff9ff3', '#feca57', '#00b894', '#e17055', '#6c5ce7'];
-
-                    function showTeam() {
-                        if (teamIndex < numTeams) {
-                            const teamMembers = teams[teamIndex].map(m => 
-                                `<div class="gen-team-member">${m}</div>`
-                            ).join('');
-                            
-                            display.innerHTML += `
-                                <div class="gen-team" style="animation-delay: ${teamIndex * 0.1}s">
-                                    <div class="gen-team-header" style="color: ${teamColors[teamIndex]}">
-                                        🏆 Equipo ${teamIndex + 1} — "${['Código Alpha', 'ByteForce', 'DevStorm', 'CodeNinja', 'PixelPioneers', 'DataDriven', 'CloudCraft', 'NeuralNet', 'SwiftCode', 'AppForge', 'TechWave', 'CodeBlaze'][teamIndex]}"
-                                    </div>
-                                    ${teamMembers}
-                                </div>
-                            `;
-                            // animate the newly appended team block for a polished reveal
-                            setTimeout(() => {
-                                const teamsEls = display.querySelectorAll('.gen-team');
-                                const lastEl = teamsEls[teamsEls.length - 1];
-                                if (lastEl && window.anime) {
-                                    anime({ targets: lastEl, translateY: [20, 0], opacity: [0, 1], duration: 600, easing: 'easeOutCubic' });
-                                }
-                                display.scrollTop = display.scrollHeight;
-                            }, 40);
-                            teamIndex++;
-                            setTimeout(showTeam, 300);
-                        } else {
-                                display.innerHTML += `<br><span class="code-output">🎓 ¡${allStudents.length} estudiantes distribuidos en ${numTeams} equipos exitosamente!</span>`;
-                                display.scrollTop = display.scrollHeight;
-                                display.classList.remove('generating');
-                                try { if (window.anime) anime({ targets: display, scale: [0.98, 1], duration: 700, easing: 'easeOutElastic(1, .7)' }); } catch(e) {}
-                                try { if (typeof createConfetti === 'function') createConfetti(); } catch(e) {}
-                                btn.disabled = false;
-                                btn.innerHTML = '<i class="fab fa-python"></i> Generar Equipos Aleatorios';
-                            }
-                    }
-                    showTeam();
-                }
-            }
-            showStep();
-        }
+        // ==================== TEAM GENERATOR (removed) ====================
+        // El código del generador de equipos fue eliminado aquí por solicitud.
+        // Si se necesita restaurarlo, consultar el historial de git.
 
         // ==================== RSVP CONFIRM (WhatsApp) ====================
         function confirmRSVP(e) {
