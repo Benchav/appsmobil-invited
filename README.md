@@ -1,3 +1,3 @@
-# Welcome to your Lovable project
+# Invitación - Concurso Aplicaciones Móviles 2026
 
-TODO: Document your project here
+TODO: Documenta este proyecto aquí
