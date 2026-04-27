@@ -1999,16 +1999,57 @@
                         </div>
                         <div class="code-body">
 <pre id="algoCode" class="code-sample">import random
+from collections import defaultdict
 
-def form_teams(participants, num_teams=12):
-    """Distribuye participantes en `num_teams` equipos de forma aleatoria."""
-    random.shuffle(participants)
-    teams = [[] for _ in range(num_teams)]
-    for i, p in enumerate(participants):
-        teams[i % num_teams].append(p)
+def form_teams_compact(participants, team_size=6):
+    """
+    participants: lista de dicts con keys 'nombre','area','anio','carrera'
+    Retorna: lista de equipos (cada equipo es una lista de participantes)
+    """
+    # 1) crear pools por área (Sistemas solo 4/5 año según regla)
+    sis   = [p for p in participants if p.get('area') == 'Sistemas' and p.get('anio') in (4,5)]
+    ing   = [p for p in participants if p.get('area') == 'Ingenieria']
+    eco   = [p for p in participants if p.get('area') == 'Economicas']
+    hum   = [p for p in participants if p.get('area') == 'Humanidades']
+    other = [p for p in participants if p.get('area') not in ('Sistemas','Ingenieria','Economicas','Humanidades')]
+
+    # 2) mezclar
+    random.shuffle(sis); random.shuffle(ing); random.shuffle(eco); random.shuffle(hum); random.shuffle(other)
+    pools = {'sis': sis, 'ing': ing, 'eco': eco, 'hum': hum, 'oth': other}
+
+    teams = []
+
+    # 3) formar equipos priorizando los roles obligatorios: 2xSistemas + 1xIngenieria
+    while len(pools['sis']) >= 2 and len(pools['ing']) >= 1:
+        team = [pools['sis'].pop(), pools['sis'].pop(), pools['ing'].pop()]
+        if pools['eco']: team.append(pools['eco'].pop())
+        if pools['hum']: team.append(pools['hum'].pop())
+        # rellenar hasta team_size desde la pool con más remanente
+        while len(team) < team_size:
+            name, lst = max(pools.items(), key=lambda kv: len(kv[1]))
+            if not lst: break
+            team.append(lst.pop())
+        teams.append(team)
+
+    # 4) distribuir sobrantes intentando maximizar diversidad por 'carrera'
+    leftovers = [p for lst in pools.values() for p in lst]
+    by_career = defaultdict(list)
+    for p in leftovers:
+        by_career[p.get('carrera','')].append(p)
+
+    for career, studs in by_career.items():
+        for s in studs:
+            candidates = [t for t in teams if len(t) < team_size]
+            if not candidates:
+                teams.append([s])
+                continue
+            def career_count(t): return sum(1 for m in t if m.get('carrera') == career)
+            best = min(candidates, key=lambda t: (career_count(t), len(t)))
+            best.append(s)
+
     return teams
 
-# Uso: form_teams(participants)</pre>
+# Uso: form_teams_compact(participants)</pre>
                         </div>
                         <div style="padding:16px; display:flex; gap:12px; justify-content:flex-end;">
                             <button class="download-btn" id="downloadAlgoBtn">Descargar .py</button>
@@ -2967,16 +3008,57 @@ def form_teams(participants, num_teams=12):
         // Se añade un preview estático y utilidades para descargar/copiar un ejemplo limpio.
         (function(){
             const exampleCode = `import random
+from collections import defaultdict
 
-def form_teams(participants, num_teams=12):
-    """Distribuye participantes en num_teams equipos de forma aleatoria."""
-    random.shuffle(participants)
-    teams = [[] for _ in range(num_teams)]
-    for i, p in enumerate(participants):
-        teams[i % num_teams].append(p)
+def form_teams_compact(participants, team_size=6):
+    """
+    participants: lista de dicts con keys 'nombre','area','anio','carrera'
+    Retorna: lista de equipos (cada equipo es una lista de participantes)
+    """
+    # 1) crear pools por área (Sistemas solo 4/5 año según regla)
+    sis   = [p for p in participants if p.get('area') == 'Sistemas' and p.get('anio') in (4,5)]
+    ing   = [p for p in participants if p.get('area') == 'Ingenieria']
+    eco   = [p for p in participants if p.get('area') == 'Economicas']
+    hum   = [p for p in participants if p.get('area') == 'Humanidades']
+    other = [p for p in participants if p.get('area') not in ('Sistemas','Ingenieria','Economicas','Humanidades')]
+
+    # 2) mezclar
+    random.shuffle(sis); random.shuffle(ing); random.shuffle(eco); random.shuffle(hum); random.shuffle(other)
+    pools = {'sis': sis, 'ing': ing, 'eco': eco, 'hum': hum, 'oth': other}
+
+    teams = []
+
+    # 3) formar equipos priorizando los roles obligatorios: 2xSistemas + 1xIngenieria
+    while len(pools['sis']) >= 2 and len(pools['ing']) >= 1:
+        team = [pools['sis'].pop(), pools['sis'].pop(), pools['ing'].pop()]
+        if pools['eco']: team.append(pools['eco'].pop())
+        if pools['hum']: team.append(pools['hum'].pop())
+        # rellenar hasta team_size desde la pool con más remanente
+        while len(team) < team_size:
+            name, lst = max(pools.items(), key=lambda kv: len(kv[1]))
+            if not lst: break
+            team.append(lst.pop())
+        teams.append(team)
+
+    # 4) distribuir sobrantes intentando maximizar diversidad por 'carrera'
+    leftovers = [p for lst in pools.values() for p in lst]
+    by_career = defaultdict(list)
+    for p in leftovers:
+        by_career[p.get('carrera','')].append(p)
+
+    for career, studs in by_career.items():
+        for s in studs:
+            candidates = [t for t in teams if len(t) < team_size]
+            if not candidates:
+                teams.append([s])
+                continue
+            def career_count(t): return sum(1 for m in t if m.get('carrera') == career)
+            best = min(candidates, key=lambda t: (career_count(t), len(t)))
+            best.append(s)
+
     return teams
 
-# Uso: form_teams(participants)`;
+# Uso: form_teams_compact(participants)`;
 
             // Download handler
             const dlBtn = document.getElementById('downloadAlgoBtn');
@@ -2986,7 +3068,7 @@ def form_teams(participants, num_teams=12):
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = 'formar_equipos_example.py';
+                    a.download = 'form_teams_compact.py';
                     document.body.appendChild(a);
                     a.click();
                     a.remove();
