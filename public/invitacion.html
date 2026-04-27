@@ -988,6 +988,33 @@
             font-size: 1.2rem;
         }
 
+        /* Algorithm preview actions */
+        .download-btn {
+            padding: 10px 16px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .copy-btn {
+            padding: 10px 14px;
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .code-sample {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
         /* AGENDA / TIMELINE */
         #agenda {
             background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 50%, var(--primary) 100%);
@@ -1962,7 +1989,33 @@
                     </ul>
                 </div>
 
-                <!-- Código de ejemplo en Python eliminado -->
+                <div class="algorithm-preview animate-on-scroll">
+                    <div class="python-code-container">
+                        <div class="code-header">
+                            <div class="code-dot red"></div>
+                            <div class="code-dot yellow"></div>
+                            <div class="code-dot green"></div>
+                            <span>Código de Ejemplo</span>
+                        </div>
+                        <div class="code-body">
+<pre id="algoCode" class="code-sample">import random
+
+def form_teams(participants, num_teams=12):
+    """Distribuye participantes en `num_teams` equipos de forma aleatoria."""
+    random.shuffle(participants)
+    teams = [[] for _ in range(num_teams)]
+    for i, p in enumerate(participants):
+        teams[i % num_teams].append(p)
+    return teams
+
+# Uso: form_teams(participants)</pre>
+                        </div>
+                        <div style="padding:16px; display:flex; gap:12px; justify-content:flex-end;">
+                            <button class="download-btn" id="downloadAlgoBtn">Descargar .py</button>
+                            <button class="copy-btn" id="copyAlgoBtn">Copiar</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Generador de equipos eliminado -->
@@ -2911,7 +2964,53 @@
 
         // ==================== TEAM GENERATOR (removed) ====================
         // El código del generador de equipos fue eliminado aquí por solicitud.
-        // Si se necesita restaurarlo, consultar el historial de git.
+        // Se añade un preview estático y utilidades para descargar/copiar un ejemplo limpio.
+        (function(){
+            const exampleCode = `import random
+
+def form_teams(participants, num_teams=12):
+    """Distribuye participantes en num_teams equipos de forma aleatoria."""
+    random.shuffle(participants)
+    teams = [[] for _ in range(num_teams)]
+    for i, p in enumerate(participants):
+        teams[i % num_teams].append(p)
+    return teams
+
+# Uso: form_teams(participants)`;
+
+            // Download handler
+            const dlBtn = document.getElementById('downloadAlgoBtn');
+            if (dlBtn) dlBtn.addEventListener('click', () => {
+                try {
+                    const blob = new Blob([exampleCode], { type: 'text/x-python' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'formar_equipos_example.py';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                } catch (e) {
+                    alert('No se pudo descargar el archivo.');
+                }
+            });
+
+            // Copy handler
+            const copyBtn = document.getElementById('copyAlgoBtn');
+            if (copyBtn) copyBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(exampleCode);
+                    // simple visual confirm
+                    if (window.anime) {
+                        try { anime({ targets: '#copyAlgoBtn', scale: [1, 1.06, 1], duration: 420 }); } catch(e){}
+                    }
+                    alert('Código copiado al portapapeles.');
+                } catch (e) {
+                    alert('No se pudo copiar al portapapeles.');
+                }
+            });
+        })();
 
         // ==================== RSVP CONFIRM (WhatsApp) ====================
         function confirmRSVP(e) {
